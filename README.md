@@ -2,6 +2,8 @@
 
 Given a database name, this program generates a Json document with the table's schema and several other schema-derived values. This Json document can then be used with a template engine to create various source files. My LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
 
+> This version is constrainted to work with tables that have only one primary key.
+
 For example, for this SQL table:
 
 ```
