@@ -2,6 +2,20 @@
 
 Given a database name, this program generates a Json document with the table's schema and several other schema-derived values. This Json document can then be used with a template engine to create various source files. My LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
 
+The output folder for the schemas generated is defined in the App.config's `schemaPath` key. 
+
+### Generating table models for C#
+
+The primary reason for creating a Json schema file for a SQL table is to create a model of that table for C# (and, in my case, Dapper). When `GenerateJsonTableSchema` runs it also creates a `ps1` file named:
+
+    gen-table-models-{databaseName}.ps1
+
+that, when run from the command line, calls `librettox.py ` to create the C# models. The command line to generate a model for any one table is:
+
+    python librettox.py -t dapper-crud\#table#model.tpl.cs  -s {0} -o dapper
+
+where {0} is the fully qualified name of the schema file just generated and the last argument, -o, specifies the output folder. This folder is relative to `template_work\output` folder under the `librettox` root folder. As shown here, the models are generated in `template_work\output\dapper`.  
+
 > This version is constrainted to work with tables that have only one primary key.
 
 For example, for this SQL table:

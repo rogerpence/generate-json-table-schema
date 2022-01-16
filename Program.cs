@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using static GenerateJsonTableSchema.SqlInfo;
 
@@ -12,6 +13,13 @@ string connectionString = ConfigurationManager.ConnectionStrings["Database"].Con
 SqlInfo si = new SqlInfo(connectionString);
 
 IEnumerable<TableAndViewNames> tableNames = si.GetTableAndViewNames(databaseName);
+
+List<string> outputFilenames = new List<string>();
+
+
+string? schemaPath = ConfigurationManager.AppSettings["schemaPath"];
+string? ps1Path = ConfigurationManager.AppSettings["ps1Path"];
+
 
 foreach (TableAndViewNames t in tableNames)
 {
@@ -60,18 +68,47 @@ foreach (TableAndViewNames t in tableNames)
         csKeyType
     );
 
-    writeJsonFile(ts, t);
+    string outputFilename = writeJsonFile(ts, t);
+    outputFilenames.Add(outputFilename);
 }
 
-void writeJsonFile(TableSchema ts, TableAndViewNames t)
+writeJsonFileList(databaseName, outputFilenames);
+
+void writeJsonFileList(string databaseName, List<string> outputFilenames)
 {
+    string outputPath = ps1Path;
+    string outputFilename = Path.Combine(outputPath, $"gen-table-models-{databaseName}.ps1");
+    string mask = @"python librettox.py -t dapper-crud\#table#model.tpl.cs  -s {0} -o dapper";
+
+    StringBuilder sb = new StringBuilder();
+
+    Console.ForegroundColor = ConsoleColor.Blue;
+
+    foreach (var schemaFilename in outputFilenames)
+    {
+        string cmdLine = String.Format(mask, schemaFilename);
+        sb.AppendLine(cmdLine);
+    }
+    File.WriteAllText(outputFilename, sb.ToString());
+    Console.WriteLine($"ps1 file written to {outputFilename}");
+    Console.ResetColor();
+}
+
+string writeJsonFile(TableSchema ts, TableAndViewNames t)
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+
     var options = new JsonSerializerOptions { WriteIndented = true };
     string jsonString = JsonSerializer.Serialize(ts, options);
-    string outputPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    //string outputPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    string outputPath = schemaPath; // Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string outputFilename = Path.Combine(outputPath, $"{t.DatabaseName}-{t.TableName}.json");
 
     File.WriteAllText(outputFilename, jsonString);
-    Console.WriteLine($"Output file written to {outputFilename}");
+    Console.WriteLine($"Schema file written to {outputFilename}");
+    Console.ResetColor();
+
+    return outputFilename;
 }
 
 string createColumnList(string TableName, IEnumerable<TableColumns> queryColumns, Helper.ColumnList listType)
