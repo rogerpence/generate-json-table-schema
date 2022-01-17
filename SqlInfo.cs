@@ -16,6 +16,22 @@ public class SqlInfo
     {
         PopulateDataTypes();
         this.ConnectionString = connectionString;
+        using (IDbConnection db = new SqlConnection(ConnectionString))
+        {
+            try
+            {
+                db.Open();
+            }
+            catch (SystemException ex)
+            {
+                //throw ex;
+                throw new ArgumentException($"Database '{db.Database}'. does not exist or couldn't be opened.");
+            }
+            finally
+            {
+                db.Close();
+            }
+        }
     }
 
     List<DataTypes> dataTypes = new List<DataTypes>();

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateJsonTableSchema": {
+      "commandName": "Project",
+      "commandLineArgs": "-d Sugarfootx"
+    }
+  }
+}

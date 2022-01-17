@@ -13,4 +13,10 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="ArgyBargy">
+      <HintPath>..\ArgyBargy\bin\Debug\net6.0\ArgyBargy.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

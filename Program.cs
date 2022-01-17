@@ -5,12 +5,39 @@ using System.Text.Json;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using static GenerateJsonTableSchema.SqlInfo;
+using CommandLineUtility;
 
-string databaseName = "Sugarfoot";
+CmdLineArgs ea = new CmdLineArgs();
+CmdArgManager cam = new CmdArgManager(ea, args, "Example command line usage");
+
+CmdArgManager.ExitCode result = cam.ParseArgs();
+if (result != CmdArgManager.ExitCode.Success)
+{
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.BackgroundColor = ConsoleColor.Red;
+    Console.WriteLine(cam.ErrorMessage);
+    Console.ResetColor();
+    return;
+}
+
+string databaseName = ea.databasename;
 
 string connectionString = ConfigurationManager.ConnectionStrings["Database"].ConnectionString.Replace("{Database}", databaseName);
 
-SqlInfo si = new SqlInfo(connectionString);
+SqlInfo si;
+
+try
+{
+    si = new SqlInfo(connectionString);
+}
+catch (SystemException ex)
+{
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.BackgroundColor = ConsoleColor.Red;
+    Console.WriteLine(ex.Message);
+    Console.ResetColor();
+    return;
+}
 
 IEnumerable<TableAndViewNames> tableNames = si.GetTableAndViewNames(databaseName);
 
