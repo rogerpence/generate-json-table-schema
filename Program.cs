@@ -78,7 +78,7 @@ void writeJsonFileList(string databaseName, List<string> outputFilenames)
 {
     string outputPath = ps1Path;
     string outputFilename = Path.Combine(outputPath, $"gen-table-models-{databaseName}.ps1");
-    string mask = @"python librettox.py -t dapper-crud\#table#model.tpl.cs  -s {0} -o dapper";
+    string mask = @"python librettox.py -t dapper-crud\cs-model.tpl.cs -s {0} -o dapper";
 
     StringBuilder sb = new StringBuilder();
 
