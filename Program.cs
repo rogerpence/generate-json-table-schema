@@ -9,6 +9,7 @@ using CommandLineUtility;
 
 CmdLineArgs ea = new CmdLineArgs();
 CmdArgManager cam = new CmdArgManager(ea, args, "Example command line usage");
+cam.HelpShown += HelpShownHandler;
 
 CmdArgManager.ExitCode result = cam.ParseArgs();
 if (result != CmdArgManager.ExitCode.Success)
@@ -21,10 +22,10 @@ if (result != CmdArgManager.ExitCode.Success)
 }
 
 string databaseName = ea.databasename;
-
 string connectionString = ConfigurationManager.ConnectionStrings["Database"].ConnectionString.Replace("{Database}", databaseName);
-
 SqlInfo si;
+
+//AttemptDatabaseConnection()
 
 try
 {
@@ -35,7 +36,7 @@ catch (SystemException ex)
     Console.ForegroundColor = ConsoleColor.White;
     Console.BackgroundColor = ConsoleColor.Red;
     Console.WriteLine(ex.Message);
-    Console.ResetColor();
+    //Environment.Exit(-1);
     return;
 }
 
@@ -99,13 +100,54 @@ foreach (TableAndViewNames t in tableNames)
     outputFilenames.Add(outputFilename);
 }
 
-writeJsonFileList(databaseName, outputFilenames);
+
+if (ea.createPS1)
+{
+    writeJsonFileList(databaseName, outputFilenames);
+}
+
+
+
+
+
+void HelpShownHandler(object sender, ShowHelpEventArgs e)
+{
+    // Show that you can get to the CmdArgManager instance.
+    //Console.WriteLine(((CmdArgManager)sender).Description);
+     
+    string? schemaPath = ConfigurationManager.AppSettings["schemaPath"];
+    string? ps1Path = ConfigurationManager.AppSettings["ps1Path"];
+    CustomConsole.WriteLineInfo("\nSchema files output path:");
+    CustomConsole.WriteLineInfo("  {0}", schemaPath);
+    CustomConsole.WriteLineInfo("\nPS1 file output path (if ps1 file is generated):");
+    CustomConsole.WriteLineInfo("  {0}", ps1Path);
+    CustomConsole.WriteLineInfo("\nThe schema output path is in the app.config[\"schemaPath\"] key");
+    CustomConsole.WriteLineInfo("The PS1 file output path is in the app.config[\"ps1Path\"] key");
+    CustomConsole.WriteLineInfo("The PS1 file name is in the app.config[\"ps1Filename\"] key");
+    CustomConsole.WriteLineInfo("The PS1 command mask is in the app.config[\"ps1CommandMask\"] key");
+
+
+    // Show that you can get to the arg definition instance.
+    //Console.WriteLine(((ExporterArgs)e.CmdArgs).blockfactor);
+}
 
 void writeJsonFileList(string databaseName, List<string> outputFilenames)
 {
+    string ps1Filename = ConfigurationManager.AppSettings["ps1Filename"];
+    string ps1CommandMask = ConfigurationManager.AppSettings["ps1CommandMask"];
+
+
     string outputPath = ps1Path;
-    string outputFilename = Path.Combine(outputPath, $"gen-table-models-{databaseName}.ps1");
-    string mask = @"python librettox.py -t dapper-crud\cs-model.tpl.cs -s {0} -o dapper";
+
+
+    //string outputFilename = Path.Combine(outputPath, "gen-table-models-{databaseName}.ps1");
+    string outputFilename = Path.Combine(outputPath, ps1Filename);
+
+    outputFilename = outputFilename.Replace("{databaseName}", databaseName);
+
+
+    //string mask = @"python librettox.py -t dapper-crud\cs-model.tpl.cs -s {0} -o dapper";
+    string mask = ps1CommandMask.Replace("{jsonSchemaFile}", "{0}");
 
     StringBuilder sb = new StringBuilder();
 
@@ -117,7 +159,7 @@ void writeJsonFileList(string databaseName, List<string> outputFilenames)
         sb.AppendLine(cmdLine);
     }
     File.WriteAllText(outputFilename, sb.ToString());
-    Console.WriteLine($"ps1 file written to {outputFilename}");
+    CustomConsole.WriteLineSuccess($"\nps1 file written to {outputFilename}");
     Console.ResetColor();
 }
 
