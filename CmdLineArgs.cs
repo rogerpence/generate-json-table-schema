@@ -13,7 +13,7 @@ public class CmdLineArgs
     const bool OPTIONAL = false;
 
     [CmdArg("--databasename", "-d", REQUIRED, "SQL Server database name")]
-    public string databasename { get; set; }
+    public string? databasename { get; set; }
 
     [CmdArg("--createPS1", "-p", OPTIONAL, "Generate PS1 file")]
     public bool createPS1 { get; set; } = false;

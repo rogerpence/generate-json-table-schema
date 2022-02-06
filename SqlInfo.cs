@@ -22,7 +22,7 @@ public class SqlInfo
             {
                 db.Open();
             }
-            catch (SystemException ex)
+            catch 
             {
                 //throw ex;
                 throw new ArgumentException($"Database '{db.Database}'. does not exist or couldn't be opened.");
