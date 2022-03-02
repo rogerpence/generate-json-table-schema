@@ -160,7 +160,7 @@ SELECT
 c.name 'ColumnName',
 t.name 'Type',
 t.name +
-CASE WHEN t.name IN ('char', 'varchar','nchar','nvarchar') THEN '('+
+CASE WHEN t.name IN ('char', 'varchar', 'nchar', 'nvarchar') THEN '('+
       CASE WHEN c.max_length=-1 THEN 'MAX'
            ELSE CONVERT(VARCHAR(4),
                         CASE WHEN t.name IN('nchar','nvarchar')
@@ -189,5 +189,5 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN
    sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 WHERE
-   c.object_id = OBJECT_ID('{{TableOrViewName')
+   c.object_id = OBJECT_ID('{TableOrViewName}')
 ```   

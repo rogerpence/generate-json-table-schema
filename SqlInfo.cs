@@ -40,7 +40,7 @@ public class SqlInfo
 
     public record DataTypes(string sql, string dotnet, string cs);
     
-    public record TableAndViewNames(string DatabaseName, string TableName);
+    public record TableAndViewNames(string DatabaseName, string TableName, string Type);
     public record TableColumns(string ColumnName,
                                string Type,
                                string DDLType,
@@ -57,7 +57,7 @@ public class SqlInfo
     {
         string sql =
             @"SELECT
-              '{DatabaseName}' as DatabaseName, TABLE_NAME as TableName 
+              '{DatabaseName}' as DatabaseName, TABLE_NAME as TableName, TABLE_TYPE as Type 
             FROM
               {DatabaseName}.INFORMATION_SCHEMA.TABLES
             WHERE SUBSTRING(TABLE_NAME, 1,2)  <> '__'"

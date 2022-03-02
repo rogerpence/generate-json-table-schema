@@ -117,9 +117,12 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
         // All columns.
         string columnSqlDeclarations = createColumnList(t.TableName, tableColumns, Helper.ColumnList.SqlDeclaration);
 
-        TableSchema ts = new TableSchema(
+        string tableType = (t.Type == "VIEW") ? "view" : "base";
+
+         TableSchema ts = new TableSchema(
             t.DatabaseName,
             t.TableName,
+            tableType,
             (List<TableColumns>)tableColumns,
             primaryKeyCSDeclaration,
             primaryKeyCSAssignment,
@@ -317,6 +320,7 @@ void CheckForMoreThanOnePrimaryKey(string TableName, IEnumerable<TableColumns> t
 record TableSchema (
     string DatabaseName,
     string TableName,
+    string Type,
     List<TableColumns> columns,
     string primaryKeyCSDeclaration,
     string primaryKeyCSAssignment,
