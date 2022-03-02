@@ -48,12 +48,15 @@ REFERENCES [dbo].[Artist] ([Id])
 GO
 ```
 
+> Note. The "Type" value shows "table" for tables and "view" for views.
+
 this program creates this Json schema document: 
 
 ```
 {
   "DatabaseName": "Sugarfoot",
   "TableName": "Artist",
+  "Type": "view" 
   "columns": [
     {
       "ColumnName": "Id",

@@ -117,7 +117,7 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
         // All columns.
         string columnSqlDeclarations = createColumnList(t.TableName, tableColumns, Helper.ColumnList.SqlDeclaration);
 
-        string tableType = (t.Type == "VIEW") ? "view" : "base";
+        string tableType = (t.Type == "VIEW") ? "view" : "table";
 
          TableSchema ts = new TableSchema(
             t.DatabaseName,
