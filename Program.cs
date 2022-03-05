@@ -96,26 +96,35 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
         IEnumerable<TableColumns> tableColumns = si.GetTableColumns(t.DatabaseName, t.TableName);
         CheckForMoreThanOnePrimaryKey(t.TableName, tableColumns);
 
-        IEnumerable<TableColumns> queryColumns = tableColumns.Where(tc => tc.PrimaryKey == "True");
-        string primaryKeyCSDeclaration = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyDeclaration);
-        string primaryKeyCSAssignment = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyAssignment);
-        string primaryKeyCSDeclaration2 = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsDeclaration);
-        string primaryKeyCSAssignment2 = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsAssignment);
-        string primaryKeySqlDeclaration = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlDeclaration);
-        string primaryKeySqlAssignment = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlAssignment);
-        string csKeyName = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyName);
-        string csKeyType = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyType);
-        string modelKeyName = createColumnList(t.TableName, queryColumns, Helper.ColumnList.modelKeyName);
+        IEnumerable<TableColumns> tableColumnsNoDates = tableColumns.Where(tc => tc.ColumnName.ToLower() != "added" &&
+                                                                                              tc.ColumnName.ToLower() != "updated" &&
+                                                                                              tc.ColumnName.ToLower() != "date_added" &&
+                                                                                              tc.ColumnName.ToLower() != "date_updated");
 
-        queryColumns = tableColumns.Where(tc => tc.Identity != "True");
-        string columnNamesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnNamesSqlList);
-        string columnValuesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnValuesSqlList);
-        string columnValuesAssignmentSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlAssignment);
-        string modelColumnNames = createColumnList(t.TableName, queryColumns, Helper.ColumnList.modelColumnNames);
-        string columnSqlDeclarationsNoIdentity = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlDeclaration);
+        IEnumerable<TableColumns> queryColumns = tableColumnsNoDates.Where(tc => tc.PrimaryKey == "True");
+          string primaryKeyCSDeclaration = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyDeclaration);
+          string primaryKeyCSDeclaration2 = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsDeclaration);
+
+          string primaryKeyCSAssignment = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyAssignment);
+          string primaryKeyCSAssignment2 = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsAssignment);
+
+          string primaryKeySqlDeclaration = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlDeclaration);
+          string primaryKeySqlAssignment = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlAssignment);
+
+          string csKeyName = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyName);
+          string csKeyType = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyType);
+
+          string modelKeyName = createColumnList(t.TableName, queryColumns, Helper.ColumnList.modelKeyName);
+
+        queryColumns = tableColumnsNoDates.Where(tc => tc.Identity != "True");
+          string columnNamesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnNamesSqlList);
+          string columnValuesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnValuesSqlList);
+          string modelColumnNames = createColumnList(t.TableName, queryColumns, Helper.ColumnList.modelColumnNames);
+          string columnSqlDeclarationsNoIdentity = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlDeclaration);
+          string columnValuesAssignmentSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlAssignment);
 
         // All columns.
-        string columnSqlDeclarations = createColumnList(t.TableName, tableColumns, Helper.ColumnList.SqlDeclaration);
+        string columnSqlDeclarations = createColumnList(t.TableName, tableColumnsNoDates, Helper.ColumnList.SqlDeclaration);
 
         string tableType = (t.Type == "VIEW") ? "view" : "table";
 

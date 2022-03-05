@@ -1,56 +1,26 @@
 ## GenerateJsonTableSchema
 
-Given a database name, this program generates a Json document with the table's schema and several other schema-derived values. This Json document can then be used with a template engine to create various source files. My LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
-
-The output folder for the schemas generated is defined in the App.config's `schemaPath` key. 
-
-### Generating table models for C#
-
-The primary reason for creating a Json schema file for a SQL table is to create a model of that table for C# (and, in my case, Dapper). When `GenerateJsonTableSchema` runs it also creates a `ps1` file named:
-
-    gen-table-models-{databaseName}.ps1
-
-that, when run from the command line, calls `librettox.py ` to create the C# models. The command line to generate a model for any one table is:
-
-    python librettox.py -t dapper-crud\#table#model.tpl.cs  -s {0} -o dapper
-
-where {0} is the fully qualified name of the schema file just generated and the last argument, -o, specifies the output folder. This folder is relative to `template_work\output` folder under the `librettox` root folder. As shown here, the models are generated in `template_work\output\dapper`.  
+Given a database name, this program generates a Json schema for tables and views. This Json document can then be used with a template engine to create various source files. The LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
 
 > This version is constrainted to work with tables that have only one primary key.
 
 For example, for this SQL table:
 
 ```
-USE [Sugarfoot]
-GO
-
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE TABLE [dbo].[Song](
-    [Id] [int] IDENTITY(1,1) NOT NULL,
-    [ArtistId] [int] NULL,
-    [Title] [nvarchar](200) NOT NULL,
-    [Added] [datetime] NULL,
-    [Updated] [datetime] NULL,
-PRIMARY KEY CLUSTERED 
+CREATE TABLE [dbo].[Artist]
 (
-    [Id] ASC
-) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
-ALTER TABLE [dbo].[Song]  WITH CHECK ADD FOREIGN KEY([ArtistId])
-REFERENCES [dbo].[Artist] ([Id])
+    [Id] INT NOT NULL PRIMARY KEY IDENTITY,
+    [Name] NVARCHAR(100) NOT NULL,
+    [PrefixWithThe] bit NOT NULL DEFAULT 0,
+    [Added] datetime,
+    [Updated] datetime
+)
+ALTER TABLE [dbo].[Song]  
+WITH CHECK ADD FOREIGN KEY([ArtistId]) REFERENCES [dbo].[Artist] ([Id])
 GO
 ```
 
-> Note. The "Type" value shows "table" for tables and "view" for views.
-
-this program creates this Json schema document: 
+the following schema is produced (the figure below is truncated to show only one column of the table).
 
 ```
 {
@@ -70,59 +40,7 @@ this program creates this Json schema document:
       "Nullable": "False",
       "PrimaryKey": "True",
       "Identity": "True"
-    },
-    {
-      "ColumnName": "Name",
-      "Type": "nvarchar",
-      "DDLType": "nvarchar(100)",
-      "CSType": "string",
-      "NETType": "String",
-      "MaxLength": 200,
-      "Precision": 0,
-      "Scale": 0,
-      "Nullable": "False",
-      "PrimaryKey": "False",
-      "Identity": "False"
-    },
-    {
-      "ColumnName": "PrefixWithThe",
-      "Type": "bit",
-      "DDLType": "bit",
-      "CSType": "bool",
-      "NETType": "Boolean",
-      "MaxLength": 1,
-      "Precision": 1,
-      "Scale": 0,
-      "Nullable": "False",
-      "PrimaryKey": "False",
-      "Identity": "False"
-    },
-    {
-      "ColumnName": "Added",
-      "Type": "datetime",
-      "DDLType": "datetime",
-      "CSType": "System.DateTime",
-      "NETType": "DateTime",
-      "MaxLength": 8,
-      "Precision": 23,
-      "Scale": 3,
-      "Nullable": "True",
-      "PrimaryKey": "False",
-      "Identity": "False"
-    },
-    {
-      "ColumnName": "Updated",
-      "Type": "datetime",
-      "DDLType": "datetime",
-      "CSType": "System.DateTime",
-      "NETType": "DateTime",
-      "MaxLength": 8,
-      "Precision": 23,
-      "Scale": 3,
-      "Nullable": "True",
-      "PrimaryKey": "False",
-      "Identity": "False"
-    }
+    }...
   ],
   "primaryKeyCSDeclaration": "int Id",
   "primaryKeyCSAssignment": "Id = Id",
@@ -140,17 +58,224 @@ this program creates this Json schema document:
 }
 ```
 
-To get table and view names in a database, this query is performed:
+### Tokens
 
-To get a list of tables and views, 
+Tokens are case-sensitive. The SQL explained in the "Implementation details" below produces the column data. The `GenerateJsonTableSchema` produces the column meta tokens. 
+
+The token values available are:
+
+#### Internal tokens
+
+`_datetime` - Time template was rendered
+`_template` - Template used
+`_schema` - Schema used
+
+#### Table tokens
+
+`DatabaseName`: Database name
+`TableName`: Table name
+`Type`: "table" or "view"
+
+#### Column tokens
+
+`ColumnName`: Name
+Example: `Id`
+
+`Type`: Type
+Example: `int`
+
+`DDLType`: SQL data type
+Example: `int`
+
+`CSType`: CX# data type
+Example:`int`
+
+`NETType`: .NET data type 
+Example:`Int32`
+
+`MaxLength`: Max length
+Example:`4`
+
+`Precision`: Precision 
+Example: `10`
+
+`Scale`: Scale
+Example: `0`
+
+`Nullable`: Nullable 
+Example: `False`
+
+`PrimaryKey`: Primary key 
+Example: `True`
+
+`Identity`: Identity column
+Example:`True`
+
+#### Column meta tokens
+
+Most of these tokens are intended for either SQL Server or C# code generation. 
+For 
+
+`primaryKeyCSDeclaration`: C# primary key declaration
+Example:`int Id`
+
+`primaryKeyCSAssignment`: C# primary key assignment
+Example:`Id = Id`
+
+`primaryKeySqlDeclaration`: SQL primary key declaration
+Example:`@Id int`
+
+`primaryKeySqlAssignment`: SQL primary key assignment
+Example: `[Id] = @Id`
+
+`modelColumnNames`: C# column model names
+Example:`model.Name, \nmodel.PrefixWithThe`
+
+`modelKeyName`: C# model key full name
+Example:`artist.Id`
+
+`csKeyName`:  C# model key name
+Example:`Id`
+
+`csKeyType`:  C# model key data type
+Example:`int`
+
+The following tokens are intended primarily for generating SQL stored procedures. Columns named `date_added`, `date_updated`, `added`, and `updated` are assumed to be row time stamps that have hard-coded assignments in the stored procedures. 
+
+`columnSqlDeclarations`: SQL column declarations -- includes identity column
+Example:`@Id int,\n@Name nvarchar(100),\n@PrefixWithThe bit`
+
+`columnSqlDeclarationsNoIdentity`:  SQL column declarations -- no identity column
+Example:`@Name nvarchar(100),\n@PrefixWithThe bit`
+
+`columnNamesSqlList`: SQL columns name list 
+Example:`[Name],\n[PrefixWithThe]`
+
+`columnValuesSqlList`:  SQL columns value list
+Example:`@Name,\n@PrefixWithThe`
+
+`columnValuesAssignmentSqlList`:  SQL values assignment list
+Example:`[Name] = @Name,\n[PrefixWithThe] = @PrefixWithThe`
+
+### Examples
+
+#### C# entity model
+
+The template below: 
 
 ```
-SELECT
-'{{DatabaseName}}' as DatabaseName, TABLE_NAME as TableName 
-FROM
-{{DatabaseName}}.INFORMATION_SCHEMA.TABLES
-WHERE SUBSTRING(TABLE_NAME, 1,2)  <> '__'
+/*
+Model definition for an entity. 
+
+Database......{{DatabaseName}}
+Table.........{{TableName}}
+Generated on..{{_datetime}}
+Template......{{_template}}
+Schema........{{_schema}}
+*/
+
+namespace DataAccess.Models
+{
+    public class {{TableName}}Model
+    {
+        {% for column in columns %}
+        public {{column.CSType}} {{column.ColumnName}} {get;set;}
+        {% endfor %}
+    }
+}
 ```
+
+Produces the C# entity model below:
+```
+/*
+Model definition for an entity. 
+
+Database......sugarfoot
+Table.........Artist
+Generated on..2022-Mar-05 13:54:54
+Template......dapper\dapper-database-model.tpl.cs
+Schema........sql-server\sugarfoot_db\*.json
+*/
+
+namespace DataAccess.Models
+{
+    public class ArtistModel
+    {
+        public int Id {get;set;}
+        public string Name {get;set;}
+        public bool PrefixWithThe {get;set;}
+        public System.DateTime Added {get;set;}
+        public System.DateTime Updated {get;set;}
+    }
+}
+```
+
+#### Insert stored procedure
+
+The following template:
+
+```
+CREATE OR ALTER PROCEDURE [dbo].[{{TableName}}_Insert]
+{{columnSqlDeclarations | indent(4, True)}}
+AS
+BEGIN
+    SET NOCOUNT ON
+    INSERT INTO [dbo].[{{TableName}}] 
+    (
+{{columnNamesSqlList | indent(8,True)}}, 
+        [Added]
+    ) 
+    VALUES(
+{{columnValuesSqlList | indent(8,True)}}, 
+        CURRENT_TIMESTAMP
+    );
+END
+SELECT CAST(SCOPE_IDENTITY() as int) as 'id'
+GO
+```
+
+The `Artist` table used in this example has `Added` and `Updated` columns to timestamp insert and update operations. The `columnNamesSqlList` and the `columnValuesSqlList` omit those columns. Note how the `Added` value is hard-coded in the template above.
+
+The template above produces the following stored procedure:
+
+```
+CREATE OR ALTER PROCEDURE [dbo].[Artist_Insert]
+    @Id int,
+    @Name nvarchar(100),
+    @PrefixWithThe bit
+AS
+BEGIN
+    SET NOCOUNT ON
+    INSERT INTO [dbo].[Artist] 
+    (
+        [Name],
+        [PrefixWithThe], 
+        [Added]
+    ) 
+    VALUES(
+        @Name,
+        @PrefixWithThe, 
+        CURRENT_TIMESTAMP
+    );
+END
+SELECT CAST(SCOPE_IDENTITY() as int) as 'id'
+GO
+```
+
+### Template tips
+
+Many of the templates are run against all of the schemas in a database at once. This quickly produces lots of members. However, there may be times when you want to, at template rendering time, exclude a given schema from producing output. 
+
+Generating the CRUD stored procedures is an example of that. You want to have both table and view schemas available, but don't want to produce CRUD stored procedures for views. In that case, putting this test at the top of the template
+
+`{% if Type == 'table' %}`
+
+and then closing the `if` statement with this at the bottom of the template
+
+`{% endif %}`
+
+renders a zero byte template. When template produces zero bytes, its output file is not produced. 
+
 
 ### Implementation details
 
@@ -158,7 +283,7 @@ WHERE SUBSTRING(TABLE_NAME, 1,2)  <> '__'
 
 To get column details, this SQL is performed for a given table. It queries the sys.columns, sys.types, sys.index_columns, and sys.indexes tables: 
 
-````
+```
 SELECT
 c.name 'ColumnName',
 t.name 'Type',
