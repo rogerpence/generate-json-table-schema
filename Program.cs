@@ -96,11 +96,14 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
         IEnumerable<TableColumns> tableColumns = si.GetTableColumns(t.DatabaseName, t.TableName);
         CheckForMoreThanOnePrimaryKey(t.TableName, tableColumns);
 
+          
+
         IEnumerable<TableColumns> tableColumnsNoDates = tableColumns.Where(tc => tc.ColumnName.ToLower() != "added" &&
                                                                                               tc.ColumnName.ToLower() != "updated" &&
                                                                                               tc.ColumnName.ToLower() != "date_added" &&
                                                                                               tc.ColumnName.ToLower() != "date_updated");
 
+        // All columns but specical date columns that are primary keys:
         IEnumerable<TableColumns> queryColumns = tableColumnsNoDates.Where(tc => tc.PrimaryKey == "True");
           string primaryKeyCSDeclaration = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsKeyDeclaration);
           string primaryKeyCSDeclaration2 = createColumnList(t.TableName, queryColumns, Helper.ColumnList.CsDeclaration);
@@ -116,6 +119,7 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
 
           string modelKeyName = createColumnList(t.TableName, queryColumns, Helper.ColumnList.modelKeyName);
 
+        // All columns but specical date columns and NOT identity columns.    
         queryColumns = tableColumnsNoDates.Where(tc => tc.Identity != "True");
           string columnNamesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnNamesSqlList);
           string columnValuesSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.columnValuesSqlList);
@@ -124,7 +128,7 @@ List<string> writeJsonFileSchemas(SqlInfo si, string databaseName)
           string columnValuesAssignmentSqlList = createColumnList(t.TableName, queryColumns, Helper.ColumnList.SqlAssignment);
 
         // All columns.
-        string columnSqlDeclarations = createColumnList(t.TableName, tableColumnsNoDates, Helper.ColumnList.SqlDeclaration);
+        string columnSqlDeclarations = createColumnList(t.TableName, tableColumns, Helper.ColumnList.SqlDeclaration);
 
         string tableType = (t.Type == "VIEW") ? "view" : "table";
 
