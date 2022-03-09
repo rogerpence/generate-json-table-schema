@@ -1,6 +1,6 @@
 ## GenerateJsonTableSchema
 
-Given a database name, this program generates a Json schema for tables and views. This Json document can then be used with a template engine to create various source files. The LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
+This program generates a Json schema for selected or all tables and views in a SQL Server database. This Json document can then be used with a template engine to create various source files. The LibrettoX utility uses Python and Jinja2 templates to create Dapper models and other source from these schemas. 
 
 > This version is constrainted to work with tables that have only one primary key.
 

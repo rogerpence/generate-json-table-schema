@@ -236,7 +236,7 @@ string writeJsonFile(TableSchema ts, TableAndViewNames t, string schemaPath)
     string jsonString = JsonSerializer.Serialize(ts, options);
     //string outputPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string outputPath = schemaPath; // Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    string outputFilename = Path.Combine(outputPath, $"{t.DatabaseName}-{t.TableName}.json");
+    string outputFilename = Path.Combine(outputPath, $"{t.DatabaseName}.{t.TableName}.json");
 
     File.WriteAllText(outputFilename, jsonString);
     Console.WriteLine($"Schema file written to {outputFilename}");
